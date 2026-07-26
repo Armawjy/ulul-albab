@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+@import 'aos/dist/aos.css';
+@import '@splidejs/splide/dist/css/splide.min.css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.svelte";
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-heading: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    
+    --color-primary-dark: #14532D;
+    --color-primary: #166534;
+    --color-primary-light: #15803D;
+    --color-primary-hover: #22C55E;
+    
+    --color-bg-base: #FFFFFF;
+    --color-bg-section: #F8FAFC;
+    --color-border-color: #E5E7EB;
+    
+    --color-text-title: #111827;
+    --color-text-body: #6B7280;
+
+    --radius-xl: 20px;
+}
+
+@layer utilities {
+    .glass {
+        @apply bg-white/80 backdrop-blur-md border border-white/30;
+    }
+    
+    .glass-dark {
+        @apply bg-primary-dark/90 backdrop-blur-md border border-white/10;
+    }
+
+    .shadow-soft {
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+    }
+    
+    .shadow-card {
+        box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05);
+    }
+
+    .badge-glow {
+        box-shadow: 0 0 16px rgba(34, 197, 94, 0.5);
+    }
+
+    .animate-fade-up {
+        animation: fadeUp 0.7s ease-in-out forwards;
+    }
+    
+    .animate-slide-left {
+        animation: slideLeft 0.7s ease-in-out forwards;
+    }
+    
+    .animate-slide-right {
+        animation: slideRight 0.7s ease-in-out forwards;
+    }
+    
+    .animate-zoom {
+        animation: zoomIn 0.7s ease-in-out forwards;
+    }
+    
+    .animate-floating {
+        animation: floating 3s ease-in-out infinite;
+    }
+
+    .animate-pulse-bounce {
+        animation: pulseBounce 2.5s ease-in-out infinite;
+    }
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+    from { opacity: 0; transform: translateX(-50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes pulseBounce {
+    0%, 100% { transform: scale(1) translateY(0); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+    50% { transform: scale(1.08) translateY(-6px); box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    @apply bg-bg-base text-text-body font-sans antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    @apply text-text-title font-heading;
+}

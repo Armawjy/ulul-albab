@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext", "DOM", "DOM.Iterable"],
+    "checkJs": false
+  },
+  "include": [
+    "resources/**/*.js",
+    "resources/**/*.svelte"
+  ],
+  "exclude": [
+    "node_modules",
+    "public"
+  ]
+}
