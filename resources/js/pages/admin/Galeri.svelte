@@ -34,10 +34,14 @@
         setTimeout(() => toast.show = false, 3000);
     };
 
+    let searchQuery = $state('');
+
     const fetchGaleri = async (page = 1) => {
         loading = true;
         try {
-            const response = await api.get(`/v1/admin/galeri?page=${page}`);
+            const params = new URLSearchParams({ page: page });
+            if (searchQuery) params.append('search', searchQuery);
+            const response = await api.get(`/v1/admin/galeri?${params.toString()}`);
             galeris = response.data.data;
             pagination = response.data.meta;
             currentPage = page;
@@ -46,6 +50,11 @@
         } finally {
             loading = false;
         }
+    };
+
+    const handleSearch = (e) => {
+        if (e) e.preventDefault();
+        fetchGaleri(1);
     };
 
     onMount(() => {
@@ -139,10 +148,12 @@
             <h1 class="text-2xl font-bold text-text-title font-heading">Galeri Foto</h1>
             <p class="text-text-body text-sm mt-1">Kelola album foto kegiatan pondok.</p>
         </div>
-        <Button size="md" onclick={openAddModal}>
-            <Plus size={18} class="mr-2" />
-            Tambah Foto
-        </Button>
+        <div class="hidden sm:block">
+            <Button size="md" onclick={openAddModal}>
+                <Plus size={18} class="mr-2" />
+                Tambah Foto
+            </Button>
+        </div>
     </div>
 
     <!-- Toast -->
@@ -159,10 +170,21 @@
 
     <Card class="overflow-hidden">
         <div class="p-4 border-b border-border-color flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="relative w-full sm:max-w-xs">
-                <Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input type="text" placeholder="Cari foto..." class="w-full pl-10 pr-4 py-2 bg-bg-section border border-border-color rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" />
-            </div>
+            <form onsubmit={handleSearch} class="flex items-center gap-2 w-full sm:max-w-md">
+                <div class="relative flex-1">
+                    <Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input 
+                        type="text" 
+                        bind:value={searchQuery}
+                        placeholder="Cari foto..." 
+                        class="w-full pl-10 pr-4 py-2 bg-bg-section border border-border-color rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                    />
+                </div>
+                <Button type="submit" size="sm">Cari</Button>
+                {#if searchQuery}
+                    <button type="button" onclick={() => { searchQuery = ''; fetchGaleri(1); }} class="px-3 py-2 text-xs text-gray-500 hover:text-red-500 font-bold">Reset</button>
+                {/if}
+            </form>
         </div>
 
         <div class="overflow-x-auto">
@@ -218,6 +240,13 @@
             </div>
         {/if}
     </Card>
+
+    <div class="sm:hidden mt-4">
+        <Button size="md" class="w-full justify-center shadow-md" onclick={openAddModal}>
+            <Plus size={18} class="mr-2" />
+            Tambah Foto
+        </Button>
+    </div>
 </div>
 
 <!-- Form Modal -->

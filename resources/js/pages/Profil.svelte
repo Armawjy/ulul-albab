@@ -96,6 +96,17 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Developer Attribution -->
+                <div class="mt-8 pt-6 border-t border-border-color/60 flex items-center gap-3.5 bg-primary/5 p-4 rounded-2xl border border-primary/20">
+                    <div class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow-md shrink-0">
+                        AW
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-extrabold tracking-wider text-emerald-600 uppercase block">Developer & Creator Website</span>
+                        <h4 class="font-heading font-extrabold text-text-title text-base leading-tight">dev: Arma Wijaya</h4>
+                    </div>
+                </div>
             </div>
             
             <div class="lg:w-1/2 w-full order-1 lg:order-2" data-aos="fade-left" data-aos-duration="700">

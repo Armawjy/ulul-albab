@@ -18,7 +18,15 @@ class BeritaController extends Controller
 
     public function index(): JsonResponse
     {
-        $beritas = Berita::latest()->paginate(10);
+        $query = Berita::query();
+        if ($search = request('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%");
+            });
+        }
+        $beritas = $query->latest()->paginate(10);
         return $this->success(BeritaResource::collection($beritas)->response()->getData(true), 'Data retrieved successfully');
     }
 

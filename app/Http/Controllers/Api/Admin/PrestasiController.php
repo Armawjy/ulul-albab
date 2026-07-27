@@ -17,7 +17,16 @@ class PrestasiController extends Controller
 
     public function index(): JsonResponse
     {
-        $prestasis = Prestasi::latest()->paginate(10);
+        $query = Prestasi::query();
+        if ($search = request('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('winner_name', 'like', "%{$search}%")
+                  ->orWhere('level', 'like', "%{$search}%")
+                  ->orWhere('year', 'like', "%{$search}%");
+            });
+        }
+        $prestasis = $query->latest()->paginate(10);
         return $this->success(PrestasiResource::collection($prestasis)->response()->getData(true), 'Data retrieved successfully');
     }
 

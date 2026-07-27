@@ -185,8 +185,183 @@
         }
     };
 
-    const printTable = () => {
-        window.print();
+    const printTable = async () => {
+        const printWin = window.open('', '_blank', 'width=1200,height=800');
+        if (printWin) {
+            printWin.document.write('<html><head><title>Memuat Laporan...</title></head><body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;"><h3>Menyiapkan Laporan Resmi PPDB...</h3><p>Mohon tunggu sebentar, sedang mengambil data rekapitulasi dari server...</p></body></html>');
+        }
+        
+        try {
+            showToast('Menyiapkan Laporan PDF...', 'success');
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (statusFilter !== 'Semua') params.append('status', statusFilter);
+
+            const res = await api.get(`/v1/admin/ppdb-registrations/export?${params.toString()}`);
+            const items = res.data || res || [];
+
+            const logoUrl = window.location.origin + '/logo.jpeg';
+            const todayStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            let rowsHtml = '';
+            items.forEach((item, idx) => {
+                let count = 0;
+                if (item.file_kk_url) count++;
+                if (item.file_akta_url) count++;
+                if (item.file_ijazah_url) count++;
+                if (item.file_rapor_url) count++;
+                if (item.file_pas_foto_url) count++;
+                if (item.file_ktp_ortu_url) count++;
+                
+                const badgeStyle = count === 6 ? 'background: #d1fae5; color: #065f46; border: 1px solid #10b981;' : (count >= 3 ? 'background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;' : 'background: #fee2e2; color: #991b1b; border: 1px solid #ef4444;');
+                const statusStyle = item.status === 'Diterima' ? 'background: #d1fae5; color: #065f46;' : (item.status === 'Diverifikasi' ? 'background: #dbeafe; color: #1e40af;' : (item.status === 'Ditolak' ? 'background: #fee2e2; color: #991b1b;' : 'background: #fef3c7; color: #92400e;'));
+
+                const fotoHtml = item.file_pas_foto_url 
+                    ? `<a href="${item.file_pas_foto_url}" target="_blank" style="text-decoration: none;"><img src="${item.file_pas_foto_url}" alt="Foto" style="width: 44px; height: 54px; object-fit: cover; border-radius: 6px; border: 2px solid #047857; display: block; margin: 0 auto; box-shadow: 0 1px 2px rgba(0,0,0,0.1);" /></a><span style="font-size: 8px; color: #047857; font-weight: bold; display: block; margin-top: 2px; text-align: center;">Pas Foto</span>`
+                    : `<span style="color: #94a3b8; font-size: 9px; display: block; text-align: center;">✗ No Foto</span>`;
+
+                const allDocs = [
+                    { label: 'KK', url: item.file_kk_url },
+                    { label: 'Akta', url: item.file_akta_url },
+                    { label: 'Ijazah', url: item.file_ijazah_url },
+                    { label: 'Rapor', url: item.file_rapor_url },
+                    { label: 'KTP Ortu', url: item.file_ktp_ortu_url }
+                ];
+
+                const imgDocs = allDocs.filter(d => d.url && !d.url.toLowerCase().endsWith('.pdf'));
+                const imagesHtml = imgDocs.length > 0 
+                    ? `<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 140px; margin: 0 auto;">` + 
+                      imgDocs.map(d => `<a href="${d.url}" target="_blank" style="text-decoration: none; text-align: center;"><img src="${d.url}" alt="${d.label}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 4px; border: 1.5px solid #10b981; display: block; margin: 0 auto;" /><span style="font-size: 8px; color: #065f46; font-weight: bold; display: block;">${d.label}</span></a>`).join('') + 
+                      `</div>`
+                    : `<span style="color: #94a3b8; font-size: 9px; font-style: italic; display: block; text-align: center;">Tidak ada gambar</span>`;
+
+                const pdfDocs = allDocs.filter(d => d.url && d.url.toLowerCase().endsWith('.pdf'));
+                const pdfsHtml = pdfDocs.length > 0 
+                    ? `<div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">` + 
+                      pdfDocs.map(d => `<a href="${d.url}" target="_blank" style="display: inline-block; padding: 3px 6px; background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; border-radius: 4px; font-size: 9px; font-weight: bold; text-decoration: none;">📄 PDF ${d.label}</a>`).join('') + 
+                      `</div>`
+                    : `<span style="color: #94a3b8; font-size: 9px; font-style: italic; display: block; text-align: center;">Tidak ada PDF</span>`;
+
+                rowsHtml += `
+                    <tr>
+                        <td style="text-align: center;">${idx + 1}</td>
+                        <td>
+                            <strong style="color: #047857; font-family: monospace;">${item.registration_number || '-'}</strong><br>
+                            <span style="font-size: 10px; color: #64748b;">${item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '-'}</span>
+                        </td>
+                        <td>
+                            <strong>${item.nama_lengkap || '-'}</strong><br>
+                            <span style="font-size: 11px; color: #475569;">${item.jenis_kelamin || '-'}</span>
+                        </td>
+                        <td>${item.asal_sekolah || '-'}</td>
+                        <td>
+                            <strong>${item.nama_orang_tua || '-'}</strong><br>
+                            <span style="font-size: 11px; color: #059669; font-family: monospace;">WA: ${item.nomor_whatsapp_ortu || '-'}</span>
+                        </td>
+                        <td style="text-align: center; padding: 6px;">${fotoHtml}</td>
+                        <td style="text-align: center; padding: 6px;">${imagesHtml}</td>
+                        <td style="text-align: center; padding: 6px;">${pdfsHtml}</td>
+                        <td style="text-align: center;">
+                            <div style="margin-bottom: 4px;">
+                                <span style="padding: 2px 8px; border-radius: 99px; font-size: 9px; font-weight: bold; display: inline-block; ${badgeStyle}">
+                                    ${count}/6 Berkas
+                                </span>
+                            </div>
+                            <span style="padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: bold; display: inline-block; ${statusStyle}">
+                                ${item.status || 'Menunggu'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Laporan PPDB Online - Pesantren Ulul Albab</title>
+    <style>
+        @page { size: A4 landscape; margin: 15mm; }
+        body { font-family: 'Arial', sans-serif; color: #1e293b; margin: 0; padding: 20px; font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .kop-surat { display: flex; align-items: center; border-bottom: 3px double #047857; padding-bottom: 15px; margin-bottom: 20px; }
+        .logo { width: 85px; height: 85px; object-fit: contain; margin-right: 20px; }
+        .kop-text { flex: 1; text-align: center; }
+        .kop-text h1 { font-size: 18px; margin: 0 0 5px 0; color: #047857; font-weight: 900; text-transform: uppercase; }
+        .kop-text h2 { font-size: 15px; margin: 0 0 5px 0; color: #0f172a; font-weight: 800; }
+        .kop-text p { font-size: 11px; margin: 2px 0; color: #475569; }
+        .judul-laporan { text-align: center; margin-bottom: 20px; }
+        .judul-laporan h3 { font-size: 16px; margin: 0 0 5px 0; text-transform: uppercase; color: #0f172a; }
+        .judul-laporan p { font-size: 12px; color: #64748b; margin: 0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; vertical-align: middle; }
+        th { background-color: #f1f5f9; font-size: 11px; text-transform: uppercase; color: #334155; font-weight: bold; text-align: center; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .footer-ttd { float: right; width: 260px; text-align: center; margin-top: 20px; page-break-inside: avoid; }
+        .footer-ttd p { margin: 5px 0; }
+        .ttd-space { height: 70px; }
+    </style>
+</head>
+<body>
+    <div class="kop-surat">
+        <img src="${logoUrl}" alt="Logo Ulul Albab" class="logo" onerror="this.style.display='none'" />
+        <div class="kop-text">
+            <h1>PONDOK PESANTREN ULUL ALBAB MAKASSAR</h1>
+            <h2>PANITIA PENERIMAAN PESERTA DIDIK BARU (PPDB) ONLINE T.A. 2026/2027</h2>
+            <p>Jenjang Pendidikan: Madrasah Aliyah (MA) Berakreditasi Unggul</p>
+            <p>Alamat: Jl. Perintis Kemerdekaan KM. 13, Daya, Kec. Biringkanaya, Kota Makassar, Sulawesi Selatan 90241</p>
+            <p>Website: www.ululalbab.sch.id | Email: ponpesululalbabmks@gmail.com | WA: 0858-2424-6172 / 0852-4250-1959</p>
+        </div>
+    </div>
+
+    <div class="judul-laporan">
+        <h3>Laporan Rekapitulasi Data Pendaftar & Kelengkapan Berkas</h3>
+        <p>Filter Status: <strong>${statusFilter}</strong> | Dicetak pada: <strong>${todayStr}</strong></p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30px;">No</th>
+                <th style="width: 120px;">No. Daftar & Tgl</th>
+                <th style="width: 130px;">Nama & JK</th>
+                <th style="width: 120px;">Asal Sekolah</th>
+                <th style="width: 130px;">Ortu & WhatsApp</th>
+                <th style="width: 65px;">Foto Siswa</th>
+                <th style="width: 140px;">Berkas Gambar</th>
+                <th style="width: 120px;">Berkas PDF</th>
+                <th style="width: 90px;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rowsHtml || '<tr><td colspan="9" style="text-align:center; padding: 20px;">Tidak ada data pendaftar yang sesuai filter</td></tr>'}
+        </tbody>
+    </table>
+
+    <div class="footer-ttd">
+        <p>Makassar, ${todayStr}</p>
+        <p>Mengetahui,</p>
+        <p><strong>Ketua Panitia PPDB Online</strong></p>
+        <div class="ttd-space"></div>
+        <p style="text-decoration: underline; font-weight: bold;">(________________________)</p>
+        <p style="font-size: 11px; color: #64748b;">NIP / NIK. ........................</p>
+    </div>
+</body>
+</html>`;
+
+            if (printWin) {
+                printWin.document.open();
+                printWin.document.write(html);
+                printWin.document.close();
+                setTimeout(() => {
+                    printWin.focus();
+                    printWin.print();
+                }, 750);
+            }
+        } catch (err) {
+            console.error('Print error:', err);
+            showToast('Gagal menyiapkan cetak laporan', 'error');
+            if (printWin) printWin.close();
+        }
     };
 
     // --- METHODS GELOMBANG (TAB 2) ---
@@ -262,7 +437,7 @@
                     onclick={printTable} 
                     class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-black text-white font-semibold text-xs sm:text-sm rounded-xl shadow-sm transition-all"
                 >
-                    <Printer size={16} /> Print
+                    <Printer size={16} /> Cetak Laporan (PDF)
                 </button>
             </div>
         {:else}
@@ -342,35 +517,99 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-100/80 text-[11px] uppercase tracking-wider text-text-title font-extrabold border-b border-border-color">
-                            <th class="px-4 py-3.5">No. Daftar</th>
-                            <th class="px-4 py-3.5">Foto</th>
-                            <th class="px-4 py-3.5">Nama Lengkap</th>
-                            <th class="px-4 py-3.5">JK</th>
-                            <th class="px-4 py-3.5">Asal Sekolah</th>
-                            <th class="px-4 py-3.5">Ortu / Wali</th>
-                            <th class="px-4 py-3.5">No. WhatsApp</th>
-                            <th class="px-4 py-3.5">Tgl Daftar</th>
-                            <th class="px-4 py-3.5">Status</th>
-                            <th class="px-4 py-3.5 text-right">Aksi</th>
+                            <th class="px-3 py-3.5">No. Daftar</th>
+                            <th class="px-3 py-3.5 text-center">Foto Siswa</th>
+                            <th class="px-3 py-3.5">Berkas Gambar</th>
+                            <th class="px-3 py-3.5">Berkas PDF</th>
+                            <th class="px-3 py-3.5">Nama Lengkap</th>
+                            <th class="px-3 py-3.5">JK</th>
+                            <th class="px-3 py-3.5">Asal Sekolah</th>
+                            <th class="px-3 py-3.5">Ortu / Wali</th>
+                            <th class="px-3 py-3.5">No. WhatsApp</th>
+                            <th class="px-3 py-3.5">Tgl Daftar</th>
+                            <th class="px-3 py-3.5">Status</th>
+                            <th class="px-3 py-3.5 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-border-color text-xs sm:text-sm">
                         {#if regLoading}
-                            <tr><td colspan="10" class="px-6 py-12 text-center text-gray-500 font-medium">Memuat data pendaftar...</td></tr>
+                            <tr><td colspan="12" class="px-6 py-12 text-center text-gray-500 font-medium">Memuat data pendaftar...</td></tr>
                         {:else if registrations.length === 0}
-                            <tr><td colspan="10" class="px-6 py-12 text-center text-gray-500 font-medium">Belum ada data pendaftar yang sesuai.</td></tr>
+                            <tr><td colspan="12" class="px-6 py-12 text-center text-gray-500 font-medium">Belum ada data pendaftar yang sesuai.</td></tr>
                         {:else}
                             {#each registrations as item}
                                 <tr class="hover:bg-primary/5 transition-colors">
-                                    <td class="px-4 py-3 font-mono font-bold text-primary-dark">{item.registration_number}</td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-3 py-3 font-mono font-bold text-primary-dark">{item.registration_number}</td>
+                                    
+                                    <!-- 1. FOTO SISWA -->
+                                    <td class="px-3 py-3 text-center">
                                         {#if item.file_pas_foto_url}
-                                            <img src={item.file_pas_foto_url} alt="Foto" class="w-10 h-10 rounded-xl object-cover border shadow-sm" />
+                                            <div class="relative group inline-block">
+                                                <img 
+                                                    src={item.file_pas_foto_url} 
+                                                    alt="Foto" 
+                                                    class="w-12 h-14 rounded-lg object-cover border-2 border-emerald-500 shadow-sm cursor-pointer hover:scale-110 transition-transform" 
+                                                    onclick={() => openPreviewFile('Pas Foto 3x4', item.file_pas_foto_url)} 
+                                                    title="Klik untuk perbesar Pas Foto" 
+                                                />
+                                                <span class="absolute -bottom-1 inset-x-0 bg-emerald-600 text-white text-[8px] font-bold text-center rounded-b py-0.5">Foto</span>
+                                            </div>
                                         {:else}
-                                            <div class="w-10 h-10 rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center"><User size={20} /></div>
+                                            <div class="w-12 h-14 rounded-lg bg-gray-100 text-gray-400 flex flex-col items-center justify-center border mx-auto"><User size={18} /><span class="text-[8px] mt-0.5">No Foto</span></div>
                                         {/if}
                                     </td>
-                                    <td class="px-4 py-3 font-bold text-text-title">{item.nama_lengkap}</td>
+
+                                    <!-- 2. BERKAS GAMBAR (Foto Dokumen) -->
+                                    <td class="px-3 py-3">
+                                        <div class="flex items-center gap-1.5 flex-wrap max-w-[150px]">
+                                            {#each [
+                                                { label: 'Kartu Keluarga', url: item.file_kk_url, name: 'KK' },
+                                                { label: 'Akta Kelahiran', url: item.file_akta_url, name: 'Akta' },
+                                                { label: 'Ijazah / SKL', url: item.file_ijazah_url, name: 'Ijazah' },
+                                                { label: 'Rapor Terakhir', url: item.file_rapor_url, name: 'Rapor' },
+                                                { label: 'KTP Ortu', url: item.file_ktp_ortu_url, name: 'KTP' }
+                                            ].filter(f => f.url && !f.url.toLowerCase().endsWith('.pdf')) as f}
+                                                <button 
+                                                    type="button" 
+                                                    onclick={() => openPreviewFile(f.label, f.url)}
+                                                    class="w-11 h-12 rounded-lg overflow-hidden border border-emerald-400 bg-gray-50 hover:border-emerald-600 transition-all shadow-sm relative group flex flex-col justify-between cursor-pointer shrink-0"
+                                                    title="Klik lihat Gambar: {f.label}"
+                                                >
+                                                    <img src={f.url} alt={f.label} class="w-full h-7 object-cover group-hover:scale-110 transition-transform" />
+                                                    <span class="bg-emerald-600 text-white text-[8px] font-bold text-center w-full py-0.5 truncate px-0.5">{f.name}</span>
+                                                </button>
+                                            {:else}
+                                                <span class="text-[10px] text-gray-400 italic">Tidak ada gambar</span>
+                                            {/each}
+                                        </div>
+                                    </td>
+
+                                    <!-- 3. BERKAS PDF -->
+                                    <td class="px-3 py-3">
+                                        <div class="flex items-center gap-1.5 flex-wrap max-w-[150px]">
+                                            {#each [
+                                                { label: 'Kartu Keluarga', url: item.file_kk_url, name: 'KK' },
+                                                { label: 'Akta Kelahiran', url: item.file_akta_url, name: 'Akta' },
+                                                { label: 'Ijazah / SKL', url: item.file_ijazah_url, name: 'Ijazah' },
+                                                { label: 'Rapor Terakhir', url: item.file_rapor_url, name: 'Rapor' },
+                                                { label: 'KTP Ortu', url: item.file_ktp_ortu_url, name: 'KTP' }
+                                            ].filter(f => f.url && f.url.toLowerCase().endsWith('.pdf')) as f}
+                                                <button 
+                                                    type="button" 
+                                                    onclick={() => openPreviewFile(f.label, f.url)}
+                                                    class="w-11 h-12 rounded-lg bg-red-50 hover:bg-red-100 border border-red-300 flex flex-col items-center justify-between p-0.5 transition-all shadow-sm group cursor-pointer shrink-0"
+                                                    title="Klik lihat PDF: {f.label}"
+                                                >
+                                                    <span class="text-[9px] font-black text-red-600 mt-1">PDF</span>
+                                                    <span class="bg-red-600 text-white text-[8px] font-bold text-center w-full rounded py-0.5 truncate px-0.5">{f.name}</span>
+                                                </button>
+                                            {:else}
+                                                <span class="text-[10px] text-gray-400 italic">Tidak ada PDF</span>
+                                            {/each}
+                                        </div>
+                                    </td>
+
+                                    <td class="px-3 py-3 font-bold text-text-title">{item.nama_lengkap}</td>
                                     <td class="px-4 py-3 font-medium text-text-body">{item.jenis_kelamin?.includes('Putra') ? 'Putra' : 'Putri'}</td>
                                     <td class="px-4 py-3 font-medium text-text-body">{item.asal_sekolah}</td>
                                     <td class="px-4 py-3 font-medium text-text-body">{item.nama_orang_tua}</td>
@@ -391,13 +630,33 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        <div class="inline-flex items-center gap-1">
+                                        <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                                            {#if item.status !== 'Diterima'}
+                                                <button 
+                                                    onclick={() => updateStatus(item.id, 'Diterima')} 
+                                                    disabled={statusUpdating}
+                                                    class="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-sm inline-flex items-center gap-1"
+                                                    title="Terima Santri Ini"
+                                                >
+                                                    <CheckCircle size={14} /> Terima
+                                                </button>
+                                            {/if}
+                                            {#if item.status !== 'Ditolak'}
+                                                <button 
+                                                    onclick={() => updateStatus(item.id, 'Ditolak')} 
+                                                    disabled={statusUpdating}
+                                                    class="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-sm inline-flex items-center gap-1"
+                                                    title="Tolak Santri Ini"
+                                                >
+                                                    <XCircle size={14} /> Tolak
+                                                </button>
+                                            {/if}
                                             <button 
                                                 onclick={() => openDetail(item)} 
-                                                class="p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors font-bold inline-flex items-center gap-1"
-                                                title="Lihat Detail & Berkas"
+                                                class="px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-xl transition-all font-bold text-xs inline-flex items-center gap-1 shadow-sm"
+                                                title="Lihat Detail & 6 Berkas"
                                             >
-                                                <Eye size={16} /> Detail
+                                                <Eye size={14} /> Detail & Berkas
                                             </button>
                                             <button 
                                                 onclick={() => confirmDeleteReg(item.id)} 
@@ -556,27 +815,54 @@
                         { label: 'Pas Foto 3x4', url: selectedReg.file_pas_foto_url },
                         { label: 'KTP Orang Tua', url: selectedReg.file_ktp_ortu_url }
                     ] as doc}
-                        <div class="p-3.5 rounded-2xl border {doc.url ? 'border-green-200 bg-green-50/30' : 'border-gray-200 bg-gray-50'} flex flex-col justify-between gap-3">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-10 h-10 rounded-xl {doc.url ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'} flex items-center justify-center font-bold text-xs shrink-0">
-                                    {doc.url ? (doc.url.endsWith('.pdf') ? 'PDF' : 'IMG') : '-'}
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-xs font-bold text-text-title truncate">{doc.label}</p>
-                                    <p class="text-[10px] font-semibold {doc.url ? 'text-green-600' : 'text-gray-400'}">
-                                        {doc.url ? '✓ File Terupload' : 'Tidak terupload'}
-                                    </p>
-                                </div>
+                        <div class="p-3 rounded-2xl border {doc.url ? 'border-green-300 bg-green-50/40 shadow-sm' : 'border-gray-200 bg-gray-50'} flex flex-col justify-between gap-3 overflow-hidden">
+                            <div class="flex items-center justify-between gap-2 border-b border-gray-200/60 pb-2">
+                                <p class="text-xs font-extrabold text-text-title truncate flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full {doc.url ? 'bg-green-500' : 'bg-gray-300'}"></span>
+                                    {doc.label}
+                                </p>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {doc.url ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
+                                    {doc.url ? (doc.url.toLowerCase().endsWith('.pdf') ? 'PDF' : 'GAMBAR') : 'KOSONG'}
+                                </span>
+                            </div>
+
+                            <!-- DIRECT PREVIEW THUMBNAIL / EMBED -->
+                            <div class="w-full h-40 rounded-xl overflow-hidden bg-white border border-gray-200 flex items-center justify-center relative group">
+                                {#if doc.url}
+                                    {#if doc.url.toLowerCase().endsWith('.pdf')}
+                                        <div class="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-red-50/30">
+                                            <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center font-black text-xs mb-1.5 shadow-sm">PDF</div>
+                                            <span class="text-[11px] font-bold text-gray-700">Dokumen PDF Terupload</span>
+                                            <span class="text-[9px] text-gray-500 mt-0.5">Klik tombol di bawah untuk membuka</span>
+                                        </div>
+                                    {:else}
+                                        <img 
+                                            src={doc.url} 
+                                            alt={doc.label} 
+                                            class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition-transform duration-300" 
+                                            onclick={() => openPreviewFile(doc.label, doc.url)}
+                                            title="Klik untuk memperbesar gambar"
+                                        />
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                            <span class="px-3 py-1 bg-white/90 rounded-full text-black text-xs font-bold flex items-center gap-1 shadow"><Eye size={12} /> Perbesar</span>
+                                        </div>
+                                    {/if}
+                                {:else}
+                                    <div class="text-gray-400 text-xs italic flex flex-col items-center gap-1">
+                                        <XCircle size={24} class="text-gray-300" />
+                                        <span>Tidak ada berkas</span>
+                                    </div>
+                                {/if}
                             </div>
 
                             {#if doc.url}
-                                <div class="flex gap-1.5 pt-2 border-t border-green-200/60">
+                                <div class="flex gap-1.5 pt-1">
                                     <button 
                                         type="button" 
                                         onclick={() => openPreviewFile(doc.label, doc.url)}
-                                        class="flex-1 py-1.5 px-2 bg-white hover:bg-primary hover:text-white text-primary border border-primary/30 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm"
+                                        class="flex-1 py-1.5 px-2 bg-white hover:bg-primary hover:text-white text-primary border border-primary/40 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm"
                                     >
-                                        <Eye size={13} /> Lihat
+                                        <Eye size={13} /> {doc.url.toLowerCase().endsWith('.pdf') ? 'Buka PDF' : 'Lihat Gambar'}
                                     </button>
                                     <a 
                                         href={doc.url} 
@@ -588,7 +874,7 @@
                                     </a>
                                 </div>
                             {:else}
-                                <div class="pt-2 text-[11px] text-gray-400 text-center italic border-t border-gray-200/60">Berkas kosong</div>
+                                <div class="py-1.5 text-[11px] text-gray-400 text-center italic">Berkas belum diunggah</div>
                             {/if}
                         </div>
                     {/each}
@@ -639,7 +925,7 @@
 <!-- MODAL PREVIEW FILE (LIHAT BERKAS) -->
 {#if showFilePreviewModal}
     <div 
-        class="fixed inset-0 z-60 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-hidden animate-fade-in"
+        class="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-hidden animate-fade-in"
         onclick={(e) => { if (e.target === e.currentTarget) showFilePreviewModal = false; }}
     >
         <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scale-up">

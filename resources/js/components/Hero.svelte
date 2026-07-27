@@ -20,14 +20,14 @@
     let videoError = $state(false);
 </script>
 
-{#if sliders && sliders.length > 1}
+{#if !backgroundVideo && sliders && sliders.length > 1}
     <section class="relative min-h-[90vh] pt-20 pb-12 bg-primary-dark">
         <ModernSlider slides={sliders} />
     </section>
 {:else}
-    <section class="relative min-h-[90vh] flex items-center pt-24 pb-16 overflow-hidden">
-        <!-- Background Image or Video with Overlay and GSAP Parallax -->
-        <div class="absolute inset-0 z-0" use:parallax={{ speed: 0.35 }}>
+    <section class="relative min-h-[90vh] flex items-center pt-24 pb-16 overflow-hidden bg-primary-dark">
+        <!-- Background Image or Video with Overlay -->
+        <div class="absolute inset-0 z-0">
             {#if backgroundVideo && !videoError}
                 <video 
                     src={backgroundVideo} 

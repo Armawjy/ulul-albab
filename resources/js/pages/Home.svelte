@@ -79,6 +79,7 @@
 
 <Hero 
     backgroundImage={sliders.length > 0 && sliders[0].image ? sliders[0].image : 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'}
+    backgroundVideo="/videos/videoplayback.mp4"
     {sliders}
 />
 

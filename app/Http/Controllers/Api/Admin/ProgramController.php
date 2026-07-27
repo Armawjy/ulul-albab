@@ -16,7 +16,14 @@ class ProgramController extends Controller
 
     public function index(): JsonResponse
     {
-        $programs = Program::orderBy('order')->paginate(10);
+        $query = Program::query();
+        if ($search = request('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        $programs = $query->orderBy('order')->paginate(10);
         return $this->success(ProgramResource::collection($programs)->response()->getData(true), 'Data retrieved successfully');
     }
 

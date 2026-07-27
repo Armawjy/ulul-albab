@@ -158,7 +158,7 @@ class PpdbRegistrationController extends Controller
         $fileFields = ['file_kk', 'file_akta', 'file_ijazah', 'file_rapor', 'file_pas_foto', 'file_ktp_ortu'];
         foreach ($fileFields as $field) {
             $urlField = $field . '_url';
-            $item->$urlField = $item->$field ? asset('storage/' . $item->$field) : null;
+            $item->$urlField = $item->$field ? '/storage/' . $item->$field : null;
         }
         return $item;
     }

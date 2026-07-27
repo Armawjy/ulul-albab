@@ -35,10 +35,14 @@
         setTimeout(() => toast.show = false, 3000);
     };
 
+    let searchQuery = $state('');
+
     const fetchPrestasi = async (page = 1) => {
         loading = true;
         try {
-            const response = await api.get(`/v1/admin/prestasi?page=${page}`);
+            const params = new URLSearchParams({ page: page });
+            if (searchQuery) params.append('search', searchQuery);
+            const response = await api.get(`/v1/admin/prestasi?${params.toString()}`);
             prestasis = response.data.data;
             pagination = response.data.meta;
             currentPage = page;
@@ -47,6 +51,11 @@
         } finally {
             loading = false;
         }
+    };
+
+    const handleSearch = (e) => {
+        if (e) e.preventDefault();
+        fetchPrestasi(1);
     };
 
     onMount(() => {
@@ -146,10 +155,12 @@
             <h1 class="text-2xl font-bold text-text-title font-heading">Prestasi Santri</h1>
             <p class="text-text-body text-sm mt-1">Kelola daftar pencapaian dan prestasi santri.</p>
         </div>
-        <Button size="md" onclick={openAddModal}>
-            <Plus size={18} class="mr-2" />
-            Tambah Prestasi
-        </Button>
+        <div class="hidden sm:block">
+            <Button size="md" onclick={openAddModal}>
+                <Plus size={18} class="mr-2" />
+                Tambah Prestasi
+            </Button>
+        </div>
     </div>
 
     {#if toast.show}
@@ -160,6 +171,23 @@
     {/if}
 
     <Card class="overflow-hidden">
+        <div class="p-4 border-b border-border-color flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <form onsubmit={handleSearch} class="flex items-center gap-2 w-full sm:max-w-md">
+                <div class="relative flex-1">
+                    <Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input 
+                        type="text" 
+                        bind:value={searchQuery}
+                        placeholder="Cari prestasi..." 
+                        class="w-full pl-10 pr-4 py-2 bg-bg-section border border-border-color rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                    />
+                </div>
+                <Button type="submit" size="sm">Cari</Button>
+                {#if searchQuery}
+                    <button type="button" onclick={() => { searchQuery = ''; fetchPrestasi(1); }} class="px-3 py-2 text-xs text-gray-500 hover:text-red-500 font-bold">Reset</button>
+                {/if}
+            </form>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -204,8 +232,25 @@
                     {/if}
                 </tbody>
             </table>
-        </div>
+        <!-- Pagination -->
+        {#if pagination && pagination.last_page > 1}
+            <div class="p-4 border-t border-border-color flex items-center justify-between text-sm text-text-body">
+                <span>Menampilkan {pagination.from} - {pagination.to} dari {pagination.total}</span>
+                <div class="flex gap-1">
+                    <button class="px-3 py-1 rounded-lg border border-border-color hover:bg-bg-section disabled:opacity-50" disabled={currentPage === 1} onclick={() => fetchPrestasi(currentPage - 1)}>Sebelumnya</button>
+                    <span class="px-3 py-1 rounded-lg bg-primary text-white">{currentPage}</span>
+                    <button class="px-3 py-1 rounded-lg border border-border-color hover:bg-bg-section disabled:opacity-50" disabled={currentPage === pagination.last_page} onclick={() => fetchPrestasi(currentPage + 1)}>Selanjutnya</button>
+                </div>
+            </div>
+        {/if}
     </Card>
+
+    <div class="sm:hidden mt-4">
+        <Button size="md" class="w-full justify-center shadow-md" onclick={openAddModal}>
+            <Plus size={18} class="mr-2" />
+            Tambah Prestasi
+        </Button>
+    </div>
 </div>
 
 <!-- Form Modal -->

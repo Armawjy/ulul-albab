@@ -17,7 +17,15 @@ class GaleriController extends Controller
 
     public function index(): JsonResponse
     {
-        $galeris = Galeri::latest()->paginate(10);
+        $query = Galeri::query();
+        if ($search = request('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        $galeris = $query->latest()->paginate(10);
         return $this->success(GaleriResource::collection($galeris)->response()->getData(true), 'Data retrieved successfully');
     }
 

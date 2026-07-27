@@ -24,7 +24,7 @@ class SettingController extends Controller
         $imageKeys = ['logo_website', 'banner_image', 'hero_image', 'galeri_banner', 'berita_banner', 'guru_banner', 'program_banner', 'prestasi_banner'];
         foreach ($imageKeys as $key) {
             if (!empty($settings[$key]) && !str_starts_with($settings[$key], 'http')) {
-                $settings[$key . '_url'] = asset('storage/' . $settings[$key]);
+                $settings[$key . '_url'] = '/storage/' . $settings[$key];
             } elseif (!empty($settings[$key])) {
                 $settings[$key . '_url'] = $settings[$key];
             }

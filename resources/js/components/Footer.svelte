@@ -296,7 +296,7 @@
         >
             <p class="text-sm text-gray-400">
                 &copy; {new Date().getFullYear()} Pondok Pesantren Ulul Albab Makassar.
-                All rights reserved.
+                All rights reserved. <span class="text-emerald-400 font-semibold ml-1">| Dev: Arma Wijaya</span>
             </p>
             <div class="flex items-center gap-6 text-sm text-gray-400">
                 <a href="#" class="hover:text-white transition-colors"

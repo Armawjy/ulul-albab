@@ -17,7 +17,15 @@ class GuruController extends Controller
 
     public function index(): JsonResponse
     {
-        $gurus = Guru::latest()->paginate(10);
+        $query = Guru::query();
+        if ($search = request('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%")
+                  ->orWhere('position', 'like', "%{$search}%");
+            });
+        }
+        $gurus = $query->latest()->paginate(10);
         return $this->success(GuruResource::collection($gurus)->response()->getData(true), 'Data retrieved successfully');
     }
 
