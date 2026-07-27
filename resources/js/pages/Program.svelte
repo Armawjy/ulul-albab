@@ -3,6 +3,7 @@
     import { ArrowRight, Microscope, Globe, Book, Languages, Coins, Monitor, Lightbulb, Users, Speech, Star } from 'lucide-svelte';
     import Card from '../components/Card.svelte';
     import Skeleton from '../animations/components/Skeleton.svelte';
+    import LightboxModal from '../animations/components/LightboxModal.svelte';
     import api from '../services/axios';
     
     let programs = $state([]);
@@ -32,6 +33,19 @@
             loading = false;
         }
     });
+
+    let selectedProgram = $state(null);
+    let isOpen = $state(false);
+
+    const openLightbox = (program) => {
+        selectedProgram = program;
+        isOpen = true;
+    };
+
+    const closeLightbox = () => {
+        isOpen = false;
+        selectedProgram = null;
+    };
 </script>
 
 <svelte:head>
@@ -74,9 +88,26 @@
                     {@const ProgramIcon = getIcon(program.icon)}
                     <div data-aos="fade-up" data-aos-delay={i * 100} data-aos-duration="600">
                         <Card class="flex flex-col h-full border border-border-color/50 hover:border-primary transition-all duration-300 ease-in-out hover:shadow-[0_10px_30px_rgba(22,101,52,0.15)] hover:-translate-y-2 group">
-                            <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                                <ProgramIcon size={28} />
-                            </div>
+                            {#if program.icon && (program.icon.startsWith('http') || program.icon.includes('/') || program.icon.includes('blob:') || program.icon.includes('.'))}
+                                <div 
+                                    class="relative w-full h-52 mb-6 rounded-2xl overflow-hidden shadow-sm cursor-pointer"
+                                    onclick={() => openLightbox(program)}
+                                    role="button"
+                                    tabindex="0"
+                                    onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && openLightbox(program)}
+                                >
+                                    <img src={program.icon} alt={program.name} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                        <span class="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full font-medium backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                            Klik Lihat Foto
+                                        </span>
+                                    </div>
+                                </div>
+                            {:else}
+                                <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                                    <ProgramIcon size={28} />
+                                </div>
+                            {/if}
                             
                             <h3 class="font-heading font-bold text-xl text-text-title mb-3 group-hover:text-primary transition-colors">{program.name}</h3>
                             <p class="text-text-body text-sm leading-relaxed mb-6 flex-grow">{program.description}</p>
@@ -91,3 +122,11 @@
         </div>
     </div>
 </section>
+
+<LightboxModal 
+    {isOpen} 
+    image={selectedProgram?.icon} 
+    title={selectedProgram?.name} 
+    category="Program Unggulan" 
+    onClose={closeLightbox} 
+/>

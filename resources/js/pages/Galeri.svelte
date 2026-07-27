@@ -1,9 +1,12 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import GalleryCard from '../components/GalleryCard.svelte';
     import Skeleton from '../animations/components/Skeleton.svelte';
     import LightboxModal from '../animations/components/LightboxModal.svelte';
     import api from '../services/axios';
+    import { fade, fly } from 'svelte/transition';
+    import { flip } from 'svelte/animate';
+    import { cubicOut, quartOut } from 'svelte/easing';
     
     const categories = ['Semua', 'Fasilitas', 'Akademik', 'Keagamaan', 'Ekstrakurikuler'];
     let activeCategory = $state('Semua');
@@ -37,14 +40,42 @@
         }
     };
 
-    onMount(() => {
-        fetchGalleries();
-    });
-
     const handleCategoryClick = (category) => {
         activeCategory = category;
         fetchGalleries();
     };
+
+    let scrollContainer = $state(null);
+    let autoPlayInterval;
+
+    const startAutoPlay = () => {
+        if (autoPlayInterval) clearInterval(autoPlayInterval);
+        autoPlayInterval = setInterval(() => {
+            if (scrollContainer) {
+                const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+                if (maxScroll > 0) {
+                    if (scrollContainer.scrollLeft >= maxScroll - 10) {
+                        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+                    } else {
+                        scrollContainer.scrollBy({ left: 320, behavior: 'smooth' });
+                    }
+                }
+            }
+        }, 2200);
+    };
+
+    const stopAutoPlay = () => {
+        if (autoPlayInterval) clearInterval(autoPlayInterval);
+    };
+
+    onMount(() => {
+        fetchGalleries();
+        startAutoPlay();
+    });
+
+    onDestroy(() => {
+        stopAutoPlay();
+    });
 </script>
 
 <svelte:head>
@@ -86,30 +117,46 @@
             {/each}
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {#if loading}
-                {#each Array(8) as _}
-                    <Skeleton height="h-72" rounded="rounded-[20px]" />
-                {/each}
-            {:else if filteredGalleries.length === 0}
-                <div class="col-span-full py-20 text-center text-text-body">
-                    Tidak ada galeri untuk kategori ini.
+        {#key activeCategory}
+            <div class="relative w-full">
+                <!-- Scroll Container -->
+                <div 
+                    bind:this={scrollContainer}
+                    class="flex flex-nowrap gap-6 overflow-x-auto scroll-smooth py-6 px-4 no-scrollbar"
+                    style="scrollbar-width: none; -ms-overflow-style: none;"
+                    in:fade={{ duration: 200 }}
+                >
+                    {#if loading}
+                        {#each Array(6) as _}
+                            <div class="w-72 sm:w-80 flex-shrink-0">
+                                <Skeleton height="h-72" rounded="rounded-[20px]" />
+                            </div>
+                        {/each}
+                    {:else if filteredGalleries.length === 0}
+                        <div class="w-full py-20 text-center text-text-body">
+                            Tidak ada galeri untuk kategori ini.
+                        </div>
+                    {:else}
+                        {#each filteredGalleries as item, i}
+                            <div 
+                                class="w-72 sm:w-80 flex-shrink-0 transition-transform duration-300 hover:-translate-y-2"
+                                in:fly={{ x: 120, duration: 600, delay: (i % 8) * 80, easing: cubicOut }}
+                                out:fade={{ duration: 150 }}
+                            >
+                                <GalleryCard 
+                                    image={item.image} 
+                                    title={item.title} 
+                                    category={item.category}
+                                    onclick={() => openLightbox(item)}
+                                />
+                            </div>
+                        {/each}
+                    {/if}
                 </div>
-            {:else}
-                {#each filteredGalleries as item (item.id)}
-                    <div data-aos="zoom-in" data-aos-duration="600">
-                        <GalleryCard 
-                            image={item.image} 
-                            title={item.title} 
-                            category={item.category}
-                            onclick={() => openLightbox(item)}
-                        />
-                    </div>
-                {/each}
-            {/if}
-        </div>
+            </div>
+        {/key}
         
     </div>
 </section>
 
-<LightboxModal {isOpen} image={selectedImage} onClose={closeLightbox} />
+<LightboxModal {isOpen} image={selectedImage?.image} title={selectedImage?.title} category={selectedImage?.category} onClose={closeLightbox} />

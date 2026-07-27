@@ -12,8 +12,6 @@
 
 <div 
     class="group relative overflow-hidden rounded-[20px] shadow-card bg-white h-72 cursor-pointer transition-all duration-500 hover:shadow-xl hover:-translate-y-1.5"
-    data-aos="zoom-in"
-    data-aos-duration="600"
     {onclick}
     role="button"
     tabindex="0"

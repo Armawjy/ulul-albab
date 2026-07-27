@@ -116,3 +116,25 @@ body {
 h1, h2, h3, h4, h5, h6 {
     @apply text-text-title font-heading;
 }
+
+/* Sembunyikan semua batang scrollbar di semua elemen (browser, modal PPDB, form, tabel, sidebar, slider) tapi tetap bisa dilayari/scroll normal */
+* {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE & Edge lama */
+}
+
+*::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, dan Microsoft Edge baru */
+    width: 0px !important;
+    height: 0px !important;
+    background: transparent !important;
+}
+
+/* Utility tambahan untuk menyembunyikan scrollbar di elemen slider/carousel */
+.no-scrollbar {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+}

@@ -1,9 +1,13 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import NewsCard from '../components/NewsCard.svelte';
     import Skeleton from '../animations/components/Skeleton.svelte';
+    import LightboxModal from '../animations/components/LightboxModal.svelte';
     import { Search } from 'lucide-svelte';
     import api from '../services/axios';
+    import { fade, fly } from 'svelte/transition';
+    import { flip } from 'svelte/animate';
+    import { cubicOut, quartOut } from 'svelte/easing';
     
     const categories = ['Semua Berita', 'Akademik', 'Keasramaan', 'Prestasi', 'Pengumuman'];
     let activeCategory = $state('Semua Berita');
@@ -30,8 +34,49 @@
         }
     };
 
+    let selectedNews = $state(null);
+    let isOpen = $state(false);
+
+    const openLightbox = (item) => {
+        selectedNews = item;
+        isOpen = true;
+    };
+
+    const closeLightbox = () => {
+        isOpen = false;
+        selectedNews = null;
+    };
+
+    let scrollContainer = $state(null);
+    let autoPlayInterval;
+
+    const startAutoPlay = () => {
+        if (autoPlayInterval) clearInterval(autoPlayInterval);
+        autoPlayInterval = setInterval(() => {
+            if (scrollContainer) {
+                const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+                if (maxScroll > 0) {
+                    if (scrollContainer.scrollLeft >= maxScroll - 10) {
+                        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+                    } else {
+                        scrollContainer.scrollBy({ left: 340, behavior: 'smooth' });
+                    }
+                }
+            }
+        }, 2200);
+    };
+
+    const stopAutoPlay = () => {
+        if (autoPlayInterval) clearInterval(autoPlayInterval);
+    };
+
     onMount(() => {
         fetchPublicBerita();
+        startAutoPlay();
+    });
+
+    onDestroy(() => {
+        stopAutoPlay();
     });
 </script>
 
@@ -86,25 +131,42 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {#if loading}
-                {#each Array(6) as _}
-                    <Skeleton height="h-96" rounded="rounded-[20px]" />
-                {/each}
-            {:else if beritas.length === 0}
-                <div class="col-span-full py-20 text-center text-text-body">Belum ada berita yang diterbitkan.</div>
-            {:else}
-                {#each beritas as item, i}
-                    <div data-aos="fade-up" data-aos-delay={i * 100} data-aos-duration="600">
-                        <NewsCard 
-                            image={item.thumbnail}
-                            title={item.title}
-                            date={item.created_at?.split(' ')[0]}
-                        />
-                    </div>
-                {/each}
-            {/if}
-        </div>
+        {#key activeCategory}
+            <div class="relative w-full">
+                <!-- Scroll Container -->
+                <div 
+                    bind:this={scrollContainer}
+                    class="flex flex-nowrap gap-8 overflow-x-auto scroll-smooth py-6 px-4 no-scrollbar"
+                    style="scrollbar-width: none; -ms-overflow-style: none;"
+                    in:fade={{ duration: 200 }}
+                >
+                    {#if loading}
+                        {#each Array(6) as _}
+                            <div class="w-80 sm:w-96 flex-shrink-0">
+                                <Skeleton height="h-96" rounded="rounded-[20px]" />
+                            </div>
+                        {/each}
+                    {:else if beritas.length === 0}
+                        <div class="w-full py-20 text-center text-text-body">Belum ada berita yang diterbitkan.</div>
+                    {:else}
+                        {#each beritas as item, i}
+                            <div 
+                                class="w-80 sm:w-96 flex-shrink-0 transition-transform duration-300 hover:-translate-y-2"
+                                in:fly={{ x: 120, duration: 600, delay: (i % 8) * 80, easing: cubicOut }}
+                                out:fade={{ duration: 150 }}
+                            >
+                                <NewsCard 
+                                    image={item.thumbnail}
+                                    title={item.title}
+                                    date={item.created_at?.split(' ')[0]}
+                                    onImageClick={() => openLightbox(item)}
+                                />
+                            </div>
+                        {/each}
+                    {/if}
+                </div>
+            </div>
+        {/key}
         
         <!-- Pagination -->
         {#if pagination && pagination.last_page > 1}
@@ -131,3 +193,11 @@
 
     </div>
 </section>
+
+<LightboxModal 
+    {isOpen} 
+    image={selectedNews?.thumbnail || selectedNews?.image} 
+    title={selectedNews?.title} 
+    category="Berita Pesantren" 
+    onClose={closeLightbox} 
+/>

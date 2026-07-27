@@ -13,7 +13,7 @@ class ProgramResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'icon' => $this->icon,
+            'icon' => $this->icon ? (str_starts_with($this->icon, 'http') ? $this->icon : (str_contains($this->icon, '/') || str_contains($this->icon, '.') ? asset('storage/' . $this->icon) : $this->icon)) : null,
             'description' => $this->description,
             'order' => $this->order,
             'created_at' => $this->created_at ? $this->created_at->format('Y-m-d H:i:s') : null,

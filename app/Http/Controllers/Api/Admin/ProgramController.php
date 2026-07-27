@@ -9,6 +9,7 @@ use App\Http\Resources\ProgramResource;
 use App\Models\Program;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class ProgramController extends Controller
 {
@@ -29,7 +30,11 @@ class ProgramController extends Controller
 
     public function store(StoreProgramRequest $request): JsonResponse
     {
-        $program = Program::create($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('icon')) {
+            $data['icon'] = $request->file('icon')->store('programs', 'public');
+        }
+        $program = Program::create($data);
         return $this->success(new ProgramResource($program), 'Program created successfully', 201);
     }
 
@@ -40,12 +45,22 @@ class ProgramController extends Controller
 
     public function update(UpdateProgramRequest $request, Program $program): JsonResponse
     {
-        $program->update($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('icon')) {
+            if ($program->icon && !str_starts_with($program->icon, 'http') && !in_array($program->icon, ['Microscope', 'Globe', 'Book', 'Languages', 'Coins', 'Monitor', 'Lightbulb', 'Users', 'Speech', 'Star'])) {
+                Storage::disk('public')->delete($program->icon);
+            }
+            $data['icon'] = $request->file('icon')->store('programs', 'public');
+        }
+        $program->update($data);
         return $this->success(new ProgramResource($program), 'Program updated successfully');
     }
 
     public function destroy(Program $program): JsonResponse
     {
+        if ($program->icon && !str_starts_with($program->icon, 'http') && !in_array($program->icon, ['Microscope', 'Globe', 'Book', 'Languages', 'Coins', 'Monitor', 'Lightbulb', 'Users', 'Speech', 'Star'])) {
+            Storage::disk('public')->delete($program->icon);
+        }
         $program->delete();
         return $this->success(null, 'Program deleted successfully');
     }

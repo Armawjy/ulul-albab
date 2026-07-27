@@ -5,14 +5,17 @@
         image = 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
         name = 'Ust. H. Ahmad Fulan, Lc., M.A.',
         role = 'Kepala Sekolah SMA/MA',
-        subject = 'Tafsir Al-Qur\'an'
+        subject = 'Tafsir Al-Qur\'an',
+        onclick = () => {}
     } = $props();
 </script>
 
 <div 
-    class="group bg-white rounded-[20px] shadow-card border border-border-color/50 overflow-hidden transition-all duration-500 ease-in-out hover:-translate-y-2.5 hover:shadow-xl hover:border-primary/40 text-center p-6"
-    data-aos="zoom-in"
-    data-aos-duration="600"
+    class="group bg-white rounded-[20px] shadow-card border border-border-color/50 overflow-hidden transition-all duration-500 ease-in-out hover:-translate-y-2.5 hover:shadow-xl hover:border-primary/40 text-center p-6 cursor-pointer"
+    {onclick}
+    role="button"
+    tabindex="0"
+    onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && onclick()}
 >
     <div class="relative w-32 h-32 mx-auto mb-5 rounded-full overflow-hidden border-4 border-primary/10 group-hover:border-primary/40 transition-colors shadow-sm group-hover:shadow-md">
         <img 

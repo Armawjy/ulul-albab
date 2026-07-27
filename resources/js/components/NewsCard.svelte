@@ -7,23 +7,32 @@
         excerpt = 'Pondok Pesantren Ulul Albab Makassar kembali membuka pendaftaran santri baru untuk jenjang SMA/MA...',
         date = '24 Juli 2026',
         author = 'Admin',
-        slug = '#'
+        slug = '#',
+        onImageClick = () => {}
     } = $props();
 </script>
 
 <div 
     class="bg-white rounded-[20px] overflow-hidden shadow-card border border-border-color/50 transition-all duration-500 ease-in-out hover:scale-[1.03] hover:shadow-xl hover:border-primary/40 hover:-translate-y-1.5 group flex flex-col h-full"
-    data-aos="fade-up"
-    data-aos-duration="600"
 >
-    <div class="relative h-56 overflow-hidden">
+    <div 
+        class="relative h-56 overflow-hidden cursor-pointer"
+        onclick={onImageClick}
+        role="button"
+        tabindex="0"
+        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && onImageClick()}
+    >
         <img 
             src={image} 
             alt={title} 
             use:lazyload
             class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
         />
-        <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span class="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full font-medium backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                Klik Lihat Foto
+            </span>
+        </div>
     </div>
     
     <div class="p-6 flex flex-col flex-grow">

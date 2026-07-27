@@ -15,7 +15,7 @@ class StoreProgramRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'icon' => 'nullable|string|max:100',
+            'icon' => 'nullable',
             'description' => 'nullable|string',
             'order' => 'integer|min:0',
         ];

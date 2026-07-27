@@ -17,6 +17,8 @@
     let formId = $state(null);
     let formName = $state('');
     let formIcon = $state('');
+    let formIconFile = $state(null);
+    let currentIconUrl = $state(null);
     let formDescription = $state('');
     let formOrder = $state(0);
 
@@ -51,26 +53,48 @@
     const openAddModal = () => {
         isEditing = false;
         formId = null; formName = ''; formIcon = ''; formDescription = ''; formOrder = 0;
+        formIconFile = null; currentIconUrl = null;
         showModal = true;
     };
 
     const openEditModal = (item) => {
         isEditing = true;
         formId = item.id; formName = item.name; formIcon = item.icon; formDescription = item.description; formOrder = item.order;
+        formIconFile = null; currentIconUrl = item.icon;
         showModal = true;
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            formIconFile = e.target.files[0];
+            currentIconUrl = URL.createObjectURL(formIconFile);
+        }
     };
 
     const submitForm = async (e) => {
         e.preventDefault();
         submitting = true;
-        const payload = { name: formName, icon: formIcon, description: formDescription, order: formOrder };
+        const formData = new FormData();
+        formData.append('name', formName);
+        if (formIconFile) {
+            formData.append('icon', formIconFile);
+        } else if (formIcon) {
+            formData.append('icon', formIcon);
+        }
+        formData.append('order', formOrder);
+        if (formDescription) formData.append('description', formDescription);
 
         try {
             if (isEditing) {
-                await api.put(`/v1/admin/program/${formId}`, payload);
+                formData.append('_method', 'PUT');
+                await api.post(`/v1/admin/program/${formId}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
                 showToast('Program diperbarui');
             } else {
-                await api.post('/v1/admin/program', payload);
+                await api.post('/v1/admin/program', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
                 showToast('Program ditambahkan');
             }
             showModal = false;
@@ -143,7 +167,18 @@
                 {:else}
                     {#each programs as item}
                         <tr class="hover:bg-bg-section/30">
-                            <td class="px-6 py-4 font-medium">{item.name}</td>
+                            <td class="px-6 py-4 font-medium">
+                                <div class="flex items-center gap-3">
+                                    {#if item.icon && (item.icon.startsWith('http') || item.icon.includes('/') || item.icon.includes('.'))}
+                                        <img src={item.icon} alt={item.name} class="w-10 h-10 rounded-xl object-cover bg-gray-100 flex-shrink-0 border border-border-color" />
+                                    {:else}
+                                        <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-bold text-xs">
+                                            {item.icon || 'Star'}
+                                        </div>
+                                    {/if}
+                                    <span>{item.name}</span>
+                                </div>
+                            </td>
                             <td class="px-6 py-4">{item.order}</td>
                             <td class="px-6 py-4 text-right">
                                 <button class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" onclick={() => openEditModal(item)}><Edit2 size={18} /></button>
@@ -166,10 +201,38 @@
 
 <Modal bind:show={showModal} title={isEditing ? 'Edit Program' : 'Tambah Program'}>
     <form onsubmit={submitForm} class="space-y-4">
-        <input type="text" bind:value={formName} placeholder="Nama Program" required class="w-full px-4 py-2 border rounded-xl" />
-        <input type="text" bind:value={formIcon} placeholder="Icon (lucide)" class="w-full px-4 py-2 border rounded-xl" />
-        <input type="number" bind:value={formOrder} placeholder="Urutan (0, 1, 2...)" class="w-full px-4 py-2 border rounded-xl" />
-        <textarea bind:value={formDescription} placeholder="Deskripsi" rows="3" class="w-full px-4 py-2 border rounded-xl resize-none"></textarea>
+        <div>
+            <label class="block text-sm font-medium text-text-title mb-1">Nama Program</label>
+            <input type="text" bind:value={formName} placeholder="Misal: Madrasah Aliyah Unggulan" required class="w-full px-4 py-2 border rounded-xl" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-text-title mb-1">Gambar / Foto Program</label>
+            {#if currentIconUrl}
+                <div class="mb-3 flex items-center gap-3">
+                    {#if currentIconUrl.startsWith('http') || currentIconUrl.includes('/') || currentIconUrl.includes('blob:') || currentIconUrl.includes('.')}
+                        <img src={currentIconUrl} alt="Preview" class="w-20 h-20 rounded-xl object-cover border border-border-color shadow-sm" />
+                    {:else}
+                        <span class="px-3 py-1 bg-gray-100 rounded-lg text-sm font-semibold">{currentIconUrl}</span>
+                    {/if}
+                </div>
+            {/if}
+            <input type="file" accept="image/*" onchange={handleFileChange} class="w-full text-sm text-text-body file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors" />
+            <div class="mt-2 flex items-center gap-2">
+                <span class="text-xs text-gray-400">Atau ketik nama icon Lucide:</span>
+                <input type="text" bind:value={formIcon} placeholder="Misal: Book, Globe, Microscope..." class="flex-1 px-3 py-1.5 text-xs border rounded-lg focus:outline-none focus:border-primary" />
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-text-title mb-1">Urutan</label>
+            <input type="number" bind:value={formOrder} placeholder="Urutan (0, 1, 2...)" class="w-full px-4 py-2 border rounded-xl" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-text-title mb-1">Deskripsi</label>
+            <textarea bind:value={formDescription} placeholder="Deskripsi program..." rows="3" class="w-full px-4 py-2 border rounded-xl resize-none"></textarea>
+        </div>
         <div class="pt-4 flex justify-end gap-3">
             <button type="button" class="px-4 py-2 hover:bg-gray-100 rounded-xl" onclick={() => showModal = false}>Batal</button>
             <Button type="submit" disabled={submitting}>{submitting ? 'Menyimpan...' : 'Simpan'}</Button>
