@@ -1,66 +1,157 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Portal Resmi & Sistem Manajemen Pondok Pesantren Ulul Albab Makassar
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi portal website interaktif dan sistem manajemen pesantren terpadu (PPDB Online, Berita, Galeri, dan Direktori Guru) menggunakan **Laravel 11 (Backend REST API)** dan **Svelte 5 + Tailwind CSS v4 + Vite (Frontend SPA)**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🏗️ Arsitektur Sistem
+- **Frontend**: Svelte 5 (Single Page Application, Runes Reactive System `$state`, `$derived`, `$props`)
+- **Backend**: Laravel 11 (REST API, Sanctum Token Authentication, Stateless API)
+- **Styling & UI**: Tailwind CSS v4, Lucide Icons, Glassmorphism UI, Lightbox Preview Modal, AOS Animations
+- **Database**: MySQL / MariaDB
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 📂 Struktur Direktori Utama
+- `/app/` - Source code Backend Laravel (Controllers, Models, Requests, Resources)
+- `/routes/api.php` - Definisi Endpoint REST API Public & Admin Protected
+- `/resources/js/` - Source code Frontend Svelte 5 SPA (Pages, Components, Services, Admin Panel)
+- `/resources/css/` - Styling utama Tailwind CSS & animasi kustom
+- `/public/build/` - Hasil kompilasi statis dari Vite untuk production siap deploy
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 1. Persiapan & Instalasi Sistem
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### A. Prasyarat Sistem
+Pastikan di komputer/server Anda telah terinstall:
+- PHP >= 8.2 (Disarankan menggunakan Laragon / XAMPP)
+- Composer >= 2.x
+- Node.js >= 18.x & NPM
+- MySQL / MariaDB
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### B. Instalasi & Konfigurasi Backend
+1. Buka terminal di dalam folder project root:
+   ```bash
+   cd d:/laragon/www/ulul-albab
+   ```
+2. Jalankan perintah instalasi dependensi PHP:
+   ```bash
+   composer install
+   ```
+3. Salin file `.env.example` menjadi `.env` (jika belum ada):
+   ```bash
+   cp .env.example .env
+   ```
+4. Generate *Application Key* Laravel:
+   ```bash
+   php artisan key:generate
+   ```
+5. Buka file `.env` dan sesuaikan koneksi database MySQL Anda:
+   ```env
+   APP_NAME="Pondok Pesantren Ulul Albab Makassar"
+   APP_ENV=local
+   APP_DEBUG=true
+   APP_URL=http://localhost:8000
 
-## Laravel Sponsors
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=ulul_albab
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### C. Migrasi Database & Seeder
+Buat database MySQL baru dengan nama `ulul_albab` (melalui phpMyAdmin atau terminal). Kemudian jalankan migrasi beserta data awal (seeder):
+```bash
+php artisan migrate:fresh --seed
+```
+*Catatan: Seeder akan otomatis mengisi data awal seperti Profil, Visi Misi, Sejarah, Program SMA/MA, Data Guru, Galeri, Berita, serta Akun Administrator.*
 
-### Premium Partners
+### D. Menghubungkan Penyimpanan Foto/Gambar (Storage Link)
+Agar gambar yang diupload admin (foto guru, berita, galeri, program) dapat dibaca oleh publik, hubungkan storage dengan perintah:
+```bash
+php artisan storage:link
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
+## 💻 2. Menjalankan Aplikasi di Komputer Lokal
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Karena sistem Frontend dan Backend menyatu dalam satu repositori terintegrasi, Anda dapat menjalankan server backend dan frontend secara bersamaan.
 
-## Code of Conduct
+### Langkah 1: Jalankan Server Backend API (Terminal 1)
+```bash
+php artisan serve
+```
+Backend API Laravel akan aktif di: `http://127.0.0.1:8000`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Langkah 2: Jalankan Frontend Svelte / Vite (Terminal 2)
+Buka terminal baru di folder yang sama, lalu install dependensi Node.js dan jalankan server pengembangan:
+```bash
+npm install
+npm run dev
+```
+Buka URL lokal yang muncul (biasanya `http://localhost:5173` atau domain Laragon Anda `http://ulul-albab.test`) di browser.
 
-## Security Vulnerabilities
+### Langkah 3: Build untuk Production (Saat Deploy Hosting)
+Saat akan diupload ke hosting / server production, compile kode Svelte menjadi aset statis:
+```bash
+npm run build
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 🔐 3. Informasi Akun Administrator (Login)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Gunakan kredensial berikut untuk masuk ke **Admin Panel** (`#/login` atau `#/admin`) dan mengelola seluruh konten pesantren:
+
+- **Email:** `admin@gmail.com` *(atau email yang diatur di UserSeeder)*
+- **Password:** `admin123`
+
+---
+
+## 🌐 4. Daftar Endpoint API (REST API)
+
+### A. Public Endpoints (Tanpa Login)
+- `GET /api/v1/home` - Mengambil ikhtisar data beranda (hero slider, program, prestasi, berita terbaru, statistik)
+- `GET /api/v1/profil` - Informasi profil pesantren
+- `GET /api/v1/sejarah` - Sejarah pendirian pesantren
+- `GET /api/v1/visimisi` - Visi dan misi lembaga
+- `GET /api/v1/program` - Daftar program unggulan SMA/MA beserta foto banner
+- `GET /api/v1/guru` - Direktori tenaga pendidik, ustadz/ustadzah, dan staf
+- `GET /api/v1/prestasi` - Daftar prestasi akademik & non-akademik santri
+- `GET /api/v1/galeri` - Album foto kegiatan pesantren
+- `GET /api/v1/berita` - Daftar artikel berita dan pengumuman terbaru
+- `GET /api/v1/kontak` - Informasi kontak, nomor WhatsApp, dan lokasi
+- `POST /api/v1/ppdb/register` - Form pendaftaran santri baru (PPDB Online) menghasilkan Nomor Registrasi Unik
+- `GET /api/v1/ppdb/check` - Cek status kelulusan/verifikasi PPDB calon santri
+
+### B. Authentication Endpoints
+- `POST /api/v1/auth/login` - Autentikasi Admin (Mengembalikan Sanctum Bearer Token & Cookie)
+- `POST /api/v1/auth/logout` - Keluar dari sesi Admin (Membutuhkan Bearer Token)
+- `GET /api/v1/auth/me` - Profil admin yang sedang login
+
+### C. Admin Protected Endpoints (Wajib Bearer Token / Login)
+- `GET /api/v1/admin/dashboard` - Statistik pesanan/pendaftar PPDB, jumlah guru, dan berita
+- `GET|POST|PUT|DELETE /api/v1/admin/berita` - CRUD Berita & upload thumbnail gambar
+- `GET|POST|PUT|DELETE /api/v1/admin/galeri` - CRUD Galeri fotokegiatan pesantren
+- `GET|POST|PUT|DELETE /api/v1/admin/guru` - CRUD Data guru, jabatan, dan foto profil
+- `GET|POST|PUT|DELETE /api/v1/admin/program` - CRUD Program pendidikan & upload foto banner program
+- `GET|POST|PUT|DELETE /api/v1/admin/prestasi` - CRUD Prestasi santri
+- `GET|PUT|DELETE /api/v1/admin/ppdb` - Manajemen pendaftar PPDB (Verifikasi status, filter jenjang & export)
+- `GET|POST|PUT|DELETE /api/v1/admin/users` - Manajemen akun administrator sistem
+- `GET|PUT /api/v1/admin/settings` - Pengaturan global website, logo, dan nomor kontak
+
+---
+
+## ✨ Fitur Unggulan UI/UX
+1. **Desain Super Premium & Modern**: Warna khas hijau pesantren yang elegan berpadu dengan efek *Glassmorphism*, *Smooth Floating Card*, dan animasi AOS.
+2. **Auto-Running Slider Tanpa Henti**: Carousel otomatis pada halaman Guru, Galeri, dan Berita yang meluncur mulus tanpa perlu diklik manual.
+3. **Lightbox Preview Modal**: Klik foto manapun (di halaman Guru, Galeri, Berita, maupun Program) untuk melihat foto ukuran penuh dengan resolusi tinggi.
+4. **PPDB Online Terintegrasi**: Calon santri mendapatkan nomor registrasi unik dan notifikasi otomatis.
+5. **Clean Desktop View**: Batang scrollbar (*browser scrollbar*) disembunyikan secara global untuk tampilan layar penuh yang bersih tanpa mengurangi fungsi scroll.
+
+---
+*Dikembangkan untuk Pondok Pesantren Ulul Albab Makassar — Mencetak Generasi Qurani, Berilmu, dan Berakhlak Mulia.*
